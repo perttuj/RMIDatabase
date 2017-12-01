@@ -5,6 +5,7 @@
  */
 package common;
 
+import java.net.InetSocketAddress;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 
@@ -15,5 +16,12 @@ import java.rmi.RemoteException;
 public interface Server extends Remote {
     public static final String REGISTRY_NAME = "CHAT_SERVER";
     
+    public ClientDTO login(Receiver res, Credentials cred) throws RemoteException;
+    
+    public boolean logout(ClientDTO ID) throws RemoteException;
+    public InetSocketAddress sendFile(ClientDTO ID, String filename, boolean access) throws RemoteException;
+    public InetSocketAddress receiveFile(ClientDTO ID, String filename) throws RemoteException;
+    public String register(Credentials cred)  throws RemoteException;
+    public String unregister(Credentials cred)  throws RemoteException;
     // include operations allowed on server
 }
