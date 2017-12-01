@@ -11,6 +11,8 @@ package client.view;
  */
 public enum Command {
     // write commands for program
+    MAKEFILE, 
+    
     REGISTER,
     
     UNREGISTER,

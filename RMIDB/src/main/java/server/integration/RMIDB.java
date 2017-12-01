@@ -78,19 +78,26 @@ public class RMIDB {
     }
     
     public boolean createFile(ClientDTO dto, String filename, boolean access) {
+        Statement st;
         try {
-            Statement st = conn.createStatement();
+            st = conn.createStatement();
             ResultSet set = st.executeQuery("SELECT * FROM FILES WHERE filename = '" + filename + "'");
             set.next();
             if (!set.getString(1).equals(filename)) {
                 return false;
             }
-            int allow = access ? 1 : 0;
-            st.executeUpdate("INSERT INTO FILES VALUES ('" + filename + ",'" + dto.getUsername() + "'," + allow + ")");
-            return true;
         } catch (SQLException e) {
-            return false;
+            try {
+                st = conn.createStatement();
+                int allow = access ? 1 : 0;
+                st.executeUpdate("INSERT INTO FILES VALUES ('" + filename + "','f', '1')");
+                return true;
+            } catch (SQLException ex) {
+                ex.printStackTrace();
+                return false;
+            }
         }
+        return false;
     }
     public boolean receiveFile(ClientDTO dto, String filename) {
         try {
@@ -118,7 +125,9 @@ public class RMIDB {
             try {
                 createTable(connection, s);
             } catch (SQLException e) {
-                continue;
+                if (s.equals("FILES")) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -126,13 +135,13 @@ public class RMIDB {
         Statement st = connection.createStatement();
         switch(table) {
             case "FILEDATA":
-                st.executeUpdate("create table FILEDATA (filename varchar(10) primary key, size tinyint, permissions tinyint)");
+                st.executeUpdate("create table FILEDATA (filename varchar(10) primary key, size int(4096), permission varchar(1))");
                 break;
             case "USERS":
                 st.executeUpdate("create table USERS (username varchar(10) primary key, password varchar(50))");
                 break;
             case "FILES":
-                st.executeUpdate("create table FILES (filename varchar(10) primary key, owner varchar(10), public tinyint)");
+                st.executeUpdate("create table FILES (filename varchar(10) primary key, owner varchar(10), permission varchar(1))");
                 break;
         }
     }

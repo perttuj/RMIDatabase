@@ -9,6 +9,7 @@ import common.ClientDTO;
 import common.Credentials;
 import common.Receiver;
 import common.Server;
+import java.io.Console;
 import java.io.File;
 import java.net.InetSocketAddress;
 import java.rmi.RemoteException;
@@ -28,6 +29,12 @@ public class Controller extends UnicastRemoteObject implements Server {
         db = new RMIDB();
         handler = new ClientHandler();
     }
+    private class Receive implements Receiver {
+        @Override
+        public void receive(String msg) {
+            System.out.println(msg);
+        }
+    }
     @Override
     public InetSocketAddress sendFile(ClientDTO ID, String filename, boolean access) throws RemoteException {
         boolean res = db.createFile(ID, filename, access);
@@ -35,7 +42,7 @@ public class Controller extends UnicastRemoteObject implements Server {
             return null;
         }
         InetSocketAddress add = UserConnection.getAddress();
-        new Thread(new UserConnection(filename, false)).start();
+        new Thread(new UserConnection(filename, true, new Receive())).start();
         return add;
     }
     @Override
@@ -45,7 +52,7 @@ public class Controller extends UnicastRemoteObject implements Server {
             return null;
         }
         InetSocketAddress add = UserConnection.getAddress();
-        new Thread(new UserConnection(filename, true)).start();
+        new Thread(new UserConnection(filename, true, new Receive())).start();
         return add;
     }
     @Override

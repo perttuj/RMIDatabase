@@ -5,10 +5,13 @@
  */
 package client.view;
 
+import client.net.ServerConnection;
 import common.ClientDTO;
 import common.Credentials;
 import common.Receiver;
 import common.Server;
+import java.io.File;
+import java.net.InetSocketAddress;
 import java.rmi.RemoteException;
 import java.rmi.server.UnicastRemoteObject;
 import java.util.Scanner;
@@ -40,11 +43,24 @@ public class UserInterpreter implements Runnable {
         running = true;
         new Thread(this).start();
     }
+    private File openFile(String path) {
+        return new File(path);
+    }
+    private String TESTFILE = "ccc.txt";
     public void run() {
         while (running) {
             try {
                 CommandLine line = new CommandLine(console.nextLine());
                 switch (line.getCommand()) {
+                    case MAKEFILE:
+                        InetSocketAddress address = server.sendFile(ID, TESTFILE, true);
+                        if (address == null) {
+                            printer.println("cannot make file");
+                            break;
+                        }
+                        ServerConnection con = new ServerConnection(address, TESTFILE, false);
+                        con.connectAndSend();
+                        break;
                     case REGISTER:
                         String registered = server.register(new Credentials(line.message[1], line.message[2]));
                         printer.println(registered);
