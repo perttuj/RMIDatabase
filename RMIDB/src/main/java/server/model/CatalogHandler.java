@@ -42,6 +42,8 @@ public class CatalogHandler {
             rec.receive("file does not exist");
             return false;
         }
+        System.out.println(ID);
+        System.out.println(clients.get(ID));
         if (!db.verifyPermissions(clients.get(ID).getUsername(), filename, 0)) {
             rec.receive("not allowed to read file");
             return false;
@@ -84,6 +86,7 @@ public class CatalogHandler {
         }
         notifyUser(clients.get(ID), filename, "deleting file");
         db.deleteFile(filename);
+        rec.receive("file deleted");
         return true;
     }
     public InetSocketAddress updateFileData(long ID, String filename, long filesize, Receiver rec) throws RemoteException {
@@ -182,7 +185,16 @@ public class CatalogHandler {
         clients.put(id, c);
     }
     private boolean remove(Client c) {
-        return clients.remove(c.getUsername()) != null;
+        Iterator ite = clients.entrySet().iterator();
+        while (ite.hasNext()) {
+            Entry e = (Entry) ite.next();
+            Client c2= (Client) e.getValue();
+            if (c.getUsername().equalsIgnoreCase(c2.getUsername())) {
+                clients.remove(e.getKey());
+                return true;
+            }
+        }
+        return false;
     }
     public boolean loggedIn(long id) {
         return clients.containsKey(id);

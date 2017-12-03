@@ -42,8 +42,16 @@ public class UserInterpreter implements Runnable {
             return;
         }
         System.out.println("starting");
+        usageMessage();
         running = true;
         new Thread(this).start();
+    }
+    private void usageMessage() {
+        System.out.println("welcome to the file catalog program!");
+        System.out.println("here, you can upload, download, update and monitor various files");
+        System.out.println("to do operations, start off by registering on the server and then logging in");
+        System.out.println("Without being logged in, you will not be able to perfomrm operations.");
+        System.out.println("You can always type 'HELP' to see all commands");
     }
     private boolean toBoolean(String s) {
         if (s.equalsIgnoreCase("true")) {
@@ -87,7 +95,6 @@ public class UserInterpreter implements Runnable {
                         break;
                     case DOWNLOAD:
                         filename = line.message[1];
-                        System.out.println(ID + filename);
                         addr = server.downloadFile(ID, filename, myReceiver);
                         if (addr == null) {
                             printer.println("cant download file");
@@ -108,6 +115,10 @@ public class UserInterpreter implements Runnable {
                         server.notifyUpdate(ID, filename, myReceiver);
                         break;
                     case LISTALL: 
+                        if (ID == -1) {
+                            printer.println("not logged in - log in to list files");
+                            break;
+                        }
                         List<? extends FileDTO> list = server.listFiles(ID);
                         final String[][] table = new String[list.size() + 1][];
                         table[0] = new String[]{"Filename:", "Owner:", "Public:", "Size:", "Writable:"};

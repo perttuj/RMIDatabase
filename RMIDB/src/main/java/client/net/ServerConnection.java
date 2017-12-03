@@ -6,8 +6,6 @@
 package client.net;
 
 import common.ServerResponseTypes;
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
@@ -76,7 +74,6 @@ public class ServerConnection {
         byte[] buffer = new byte[8192];
         int bytes;
         while ((bytes = in.read(buffer)) != -1) {
-            System.out.println(bytes);
             out.write(buffer, 0, bytes);
         }
         out.flush();

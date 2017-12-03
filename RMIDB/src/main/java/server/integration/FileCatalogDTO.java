@@ -86,7 +86,7 @@ public class FileCatalogDTO {
     public boolean unregister(Credentials cred) {
         try {
             deleteUser.setString(1, cred.getUser());
-            deleteUser.executeQuery();
+            deleteUser.executeUpdate();
             return true;
         } catch (SQLException e) {
             e.printStackTrace();

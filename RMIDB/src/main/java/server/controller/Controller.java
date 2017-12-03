@@ -134,6 +134,10 @@ public class Controller extends UnicastRemoteObject implements Server {
      */
     @Override
     public synchronized InetSocketAddress downloadFile(long ID, String filename, Receiver rec) throws RemoteException {
+        if (ID == -1 || !handler.loggedIn(ID)) {
+            rec.receive("login to download files");
+            return null;
+        }
         boolean downloadPossible = handler.downloadFile(ID, filename, rec);
         if (!downloadPossible) {
             return null;

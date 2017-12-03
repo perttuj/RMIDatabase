@@ -20,7 +20,6 @@ public class Startup {
     public static void main(String[] args) {
         try {
             Server server = (Server) Naming.lookup(Server.REGISTRY_NAME);
-            System.out.println("starting thread");
             new UserInterpreter(server).start();
         } catch (NotBoundException | MalformedURLException | RemoteException e) {
             e.printStackTrace();
