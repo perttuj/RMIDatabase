@@ -11,13 +11,41 @@ package client.view;
  */
 public enum Command {
     // write commands for program
-    MAKEFILE, 
+    HELP("HELP"),
     
-    REGISTER,
+    QUIT("QUIT"),
     
-    UNREGISTER,
+    UPLOAD("UPLOAD <filename> <public> <permissions>"), 
     
-    LOGIN,
+    DOWNLOAD("DOWNLOAD <filename>"),
     
-    LOGOUT;
+    DELETE("DELETE <filename>"),
+    
+    NOTIFY("NOTIFY <filename>"),
+    
+    UPDATEINFO("UPDATEINFO <filename> <public> <permissions>"),
+    
+    UPDATEDATA("UPDATEDATA <filename>"),
+    
+    LISTALL("LISTALL"),
+    
+    REGISTER("REGISTER <username> <password>"),
+    
+    UNREGISTER("UNREGISTER <username> <password>"),
+    
+    LOGIN("LOGIN <username> <password>"),
+    
+    LOGOUT("LOGOUT");
+    private final String description;
+    private final int length;
+    private Command(String desc) {
+        description = desc;
+        length = desc.split(CommandLine.DELIMETER).length;
+    }
+    public String getDescription() {
+        return description;
+    }
+    public int getLength() {
+        return length;
+    }
 }

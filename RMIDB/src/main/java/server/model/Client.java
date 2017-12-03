@@ -27,6 +27,9 @@ public class Client implements ClientDTO {
     public void printToReceiver(String s) throws RemoteException {
         receiver.receive(s);
     }
+    protected Receiver getReceiver() {
+        return this.receiver;
+    }
     protected String getPass() {
         return pass;
     }

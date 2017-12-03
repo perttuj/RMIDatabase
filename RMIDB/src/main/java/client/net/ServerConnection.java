@@ -5,17 +5,19 @@
  */
 package client.net;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
+import common.ServerResponseTypes;
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.ByteBuffer;
 
 /**
  *
@@ -24,53 +26,77 @@ import java.net.SocketException;
 public class ServerConnection {
     public static final String USER_DIRECTORY = "user/";
     private static final int TIMEOUT_USER_SOCKET = 1800000;   // User socket timeout time
-    private static final int TIMEOUT_SERVER_SOCKET = 30000;   // Timeout for server socket
-    private Socket socket;
-    private String filename;
-    private InetSocketAddress address;
-    private boolean receive;
+    private static final int TIMEOUT_SERVER_SOCKET = 300000;   // Timeout for server socket
     
-    public ServerConnection(InetSocketAddress add, String fname, boolean receiving) {
-        this.filename = fname;
-        this.receive = receiving;
-        this.address = add;
+    public ServerConnection() {
     }
     
-    public void connectAndSend() throws IOException {
-        System.out.println("connecting");
-        socket = new Socket();
-        socket.connect(address, TIMEOUT_SERVER_SOCKET);
+    public void connectAndSend(InetSocketAddress add, long ID, String filename, boolean receive) throws IOException {
+        System.out.println("connecting to server");
+        Socket socket = new Socket();
+        socket.connect(add, TIMEOUT_SERVER_SOCKET);
         socket.setSoTimeout(TIMEOUT_USER_SOCKET);
-        start(socket);
-        close();
+        start(socket, filename, ID, receive);
     }
-    private void close() throws IOException {
-        socket.close();
-    }
-    private void start(Socket server) throws SocketException, IOException  {
+    private void start(Socket server, String filename, long ID, boolean receive) throws SocketException, IOException  {
+        waitForServer(server, ID);
         if (receive) {
-            receiveFrom(server);
+            receiveFrom(server, filename);
         } else {
-            sendTo(server);
+            sendTo(server, filename);
         }
     }
-    private void sendTo(Socket server) throws IOException {
-        System.out.println("sending");
-        BufferedWriter bw = new BufferedWriter(new OutputStreamWriter(server.getOutputStream()));
-        BufferedReader br = new BufferedReader(new FileReader(ServerConnection.USER_DIRECTORY + filename));
-        String line;
-        while ((line = br.readLine()) != null) {
-            bw.write(line);
-        }
-        bw.flush();
-        System.out.println("done sending");
+    public static long getFileSize(String filename) {
+        File f = new File(USER_DIRECTORY + filename);
+        return f.length();
     }
-    private void receiveFrom(Socket server) throws IOException {
-        BufferedReader in = new BufferedReader(new InputStreamReader(server.getInputStream()));
-        BufferedWriter bw = new BufferedWriter(new FileWriter(ServerConnection.USER_DIRECTORY + filename));
-        String line;
-        while ((line = in.readLine()) != null) {
-            bw.write(line);
+    private void waitForServer(Socket socket, long ID) throws IOException {
+        InputStream in = socket.getInputStream();
+        OutputStream out = socket.getOutputStream();
+        String p = ServerResponseTypes.SERVER_READY.name();
+        byte[] buf = new byte[1024];
+        ByteBuffer buffer = ByteBuffer.allocate(Long.BYTES);
+        buffer.putLong(ID);
+        byte[] bufarr = buffer.array();
+        boolean waiting = true;
+        while (waiting) {
+            in.read(buf);
+            String s = new String(buf);
+            if (s.contains(p)) {
+                waiting = false;
+                out.write(bufarr);
+                out.flush();
+            }
         }
+    }
+    private void sendTo(Socket server, String filename) throws IOException {
+        System.out.println("sending to server");
+        FileInputStream in = new FileInputStream(USER_DIRECTORY + filename);
+        OutputStream out = server.getOutputStream();
+        byte[] buffer = new byte[8192];
+        int bytes;
+        while ((bytes = in.read(buffer)) != -1) {
+            System.out.println(bytes);
+            out.write(buffer, 0, bytes);
+        }
+        out.flush();
+        out.close();
+        server.close();
+        System.out.println("sending done");
+    }
+    private void receiveFrom(Socket server, String filename) throws IOException {
+        System.out.println("receiving from server");
+        File file = new File(USER_DIRECTORY + filename);
+        OutputStream out = new FileOutputStream(file);
+        InputStream in = server.getInputStream();
+        byte[] buffer = new byte[4096];
+        int bytes;
+        while ((bytes = in.read(buffer)) != -1) {
+            out.write(buffer, 0, bytes);
+        }
+        out.flush();
+        out.close();
+        server.close();
+        System.out.println("download done");
     }
 }
